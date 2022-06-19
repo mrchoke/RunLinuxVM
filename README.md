@@ -2,6 +2,53 @@
 
 Install and run GUI Linux in a virtual machine using the Virtualization framework.
 
+## การ build และใช้งาน
+
+** __ให้เรากำหนด Developer Profile และ Signing package__
+
+## Options ที่เพิ่มเข้าไป
+
+```
+$ /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM --help
+Options available:
+ --cpu, -c: number of cpus [1..9]
+ --disk, -d: disk image size in GB
+ --mem, -m: memory size in GB
+ --path, -p: bundle path with tailing slash eg. /path/to/Debian.bundle/
+ --resolution, -r: screen resolution preset [hd, fhd, 2k, 4k]
+ --help, -h: show this help
+
+```
+
+## การ run VM
+
+ถ้า click run app โดยตรงจะใช้ path ที่กำหนดไว้ใน code คือ `$HOME/LinuxVM.bundle` ถ้าเราปิด dialog ทิ้งหรือติดตั้งไม่สำเร็จต้องลบ path นั้นทิ้งก่อน ถึงจะ run ครั้งต่อไปได้
+
+### ตัวอย่างการ run แบบระบุ options
+
+การ run ครั้งแรกจะเป็นการติดตั้งเราต้องเตรียม ISO ไว้ให้เรียบร้อย และ ระบุ option -d หรือ --disk เป็นขนาดของ image หน่วยเป็น GB ถ้า run ครั้งต่อไปก็ไม่จำเป็นต้องระบุขนาด disk
+
+```
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+ -p $HOME/LinuxVM/Ubuntu.bundle/ \
+ -r hd  \
+ -c 4 \
+ -m 4 \
+ -d 10
+
+```
+
+การ run หลังจากติดตั้งเสร็จเราสามารถเปลี่ยนค่าต่าง ๆ ได้ตามใจชอบหรือตามความสามารถของเครื่องนะครับ
+
+```
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+ -p $HOME/LinuxVM/Ubuntu.bundle/ \
+ -r 4k \
+ -c 4 \
+ -m 4 
+
+```
+
 ## Overview
 
 This sample code project demonstrates how to install and run GUI Linux virtual machines (VMs) on a Mac.
