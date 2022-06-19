@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8F0313B227CB143B00360D7E /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0313B127CB143B00360D7E /* Virtualization.framework */; };
+		50535A58285E074300335268 /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0313B127CB143B00360D7E /* Virtualization.framework */; };
 		8FF8298D27500C060037FA83 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FF8298C27500C060037FA83 /* AppDelegate.swift */; };
 		8FF8298F27500C070037FA83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8FF8298E27500C070037FA83 /* Assets.xcassets */; };
 		8FF8299227500C070037FA83 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FF8299027500C070037FA83 /* MainMenu.xib */; };
@@ -18,7 +18,7 @@
 		62A7A2B81952CC2F11BFE9A2 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		8F0313B127CB143B00360D7E /* Virtualization.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Virtualization.framework; path = System/Library/Frameworks/Virtualization.framework; sourceTree = SDKROOT; };
 		8FDC7765280E2517002AA4ED /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8FF8298927500C060037FA83 /* GUILinuxVirtualMachineSampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GUILinuxVirtualMachineSampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8FF8298927500C060037FA83 /* RunLinuxVM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RunLinuxVM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FF8298C27500C060037FA83 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8FF8298E27500C070037FA83 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8FF8299127500C070037FA83 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -31,7 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F0313B227CB143B00360D7E /* Virtualization.framework in Frameworks */,
+				50535A58285E074300335268 /* Virtualization.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,7 +50,7 @@
 			isa = PBXGroup;
 			children = (
 				E489E24B87B74AAC6D64B249 /* README.md */,
-				8FF8298B27500C060037FA83 /* GUILinuxVirtualMachineSampleApp */,
+				8FF8298B27500C060037FA83 /* RunLinuxVM */,
 				8FF8298A27500C060037FA83 /* Products */,
 				8FF82999275040C80037FA83 /* Frameworks */,
 				7C99BD11C87A466A17F398E6 /* Configuration */,
@@ -61,12 +61,12 @@
 		8FF8298A27500C060037FA83 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8FF8298927500C060037FA83 /* GUILinuxVirtualMachineSampleApp.app */,
+				8FF8298927500C060037FA83 /* RunLinuxVM.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		8FF8298B27500C060037FA83 /* GUILinuxVirtualMachineSampleApp */ = {
+		8FF8298B27500C060037FA83 /* RunLinuxVM */ = {
 			isa = PBXGroup;
 			children = (
 				8FDC7765280E2517002AA4ED /* Info.plist */,
@@ -75,7 +75,7 @@
 				8FF8299027500C070037FA83 /* MainMenu.xib */,
 				8FF8299327500C070037FA83 /* GUILinuxVirtualMachineSampleApp.entitlements */,
 			);
-			path = GUILinuxVirtualMachineSampleApp;
+			path = RunLinuxVM;
 			sourceTree = "<group>";
 		};
 		8FF82999275040C80037FA83 /* Frameworks */ = {
@@ -97,9 +97,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8FF8298827500C060037FA83 /* GUILinuxVirtualMachineSampleApp */ = {
+		8FF8298827500C060037FA83 /* RunLinuxVM */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8FF8299627500C070037FA83 /* Build configuration list for PBXNativeTarget "GUILinuxVirtualMachineSampleApp" */;
+			buildConfigurationList = 8FF8299627500C070037FA83 /* Build configuration list for PBXNativeTarget "RunLinuxVM" */;
 			buildPhases = (
 				8FF8298527500C060037FA83 /* Sources */,
 				8FF8298627500C060037FA83 /* Frameworks */,
@@ -109,9 +109,11 @@
 			);
 			dependencies = (
 			);
-			name = GUILinuxVirtualMachineSampleApp;
+			name = RunLinuxVM;
+			packageProductDependencies = (
+			);
 			productName = GUILinuxVirtualMachineSampleApp;
-			productReference = 8FF8298927500C060037FA83 /* GUILinuxVirtualMachineSampleApp.app */;
+			productReference = 8FF8298927500C060037FA83 /* RunLinuxVM.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -130,7 +132,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 8FF8298427500C060037FA83 /* Build configuration list for PBXProject "GUILinuxVirtualMachineSampleApp" */;
+			buildConfigurationList = 8FF8298427500C060037FA83 /* Build configuration list for PBXProject "RunLinuxVM" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -139,11 +141,13 @@
 				Base,
 			);
 			mainGroup = 8FF8298027500C060037FA83;
+			packageReferences = (
+			);
 			productRefGroup = 8FF8298A27500C060037FA83 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8FF8298827500C060037FA83 /* GUILinuxVirtualMachineSampleApp */,
+				8FF8298827500C060037FA83 /* RunLinuxVM */,
 			);
 		};
 /* End PBXProject section */
@@ -244,7 +248,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = macosx13.0;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -304,7 +308,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				SDKROOT = macosx;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx13.0;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
@@ -316,7 +321,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "$(PROJECT_DIR)/GUILinuxVirtualMachineSampleApp/GUILinuxVirtualMachineSampleApp.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "$(PROJECT_DIR)/RunLinuxVM/GUILinuxVirtualMachineSampleApp.entitlements";
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
@@ -327,7 +332,9 @@
 				DEVELOPMENT_TEAM = 96775H948U;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(PROJECT_DIR)/GUILinuxVirtualMachineSampleApp/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/RunLinuxVM/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = RunLinuxVM;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -337,10 +344,11 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.GUILinuxVirtualMachineSampleApp${SAMPLE_CODE_DISAMBIGUATOR}";
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.RunLinuxVM${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = macosx;
+				SDKROOT = macosx13.0;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -352,9 +360,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "$(PROJECT_DIR)/GUILinuxVirtualMachineSampleApp/GUILinuxVirtualMachineSampleApp.entitlements";
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_ENTITLEMENTS = "$(PROJECT_DIR)/RunLinuxVM/GUILinuxVirtualMachineSampleApp.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development: Supphachoke Suntiwichaya (373VAZTPQ2)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -363,7 +371,9 @@
 				DEVELOPMENT_TEAM = 96775H948U;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(PROJECT_DIR)/GUILinuxVirtualMachineSampleApp/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/RunLinuxVM/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = RunLinuxVM;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -373,10 +383,11 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.GUILinuxVirtualMachineSampleApp${SAMPLE_CODE_DISAMBIGUATOR}";
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.RunLinuxVM${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = macosx;
+				SDKROOT = macosx13.0;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -385,7 +396,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8FF8298427500C060037FA83 /* Build configuration list for PBXProject "GUILinuxVirtualMachineSampleApp" */ = {
+		8FF8298427500C060037FA83 /* Build configuration list for PBXProject "RunLinuxVM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8FF8299427500C070037FA83 /* Debug */,
@@ -394,7 +405,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8FF8299627500C070037FA83 /* Build configuration list for PBXNativeTarget "GUILinuxVirtualMachineSampleApp" */ = {
+		8FF8299627500C070037FA83 /* Build configuration list for PBXNativeTarget "RunLinuxVM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8FF8299727500C070037FA83 /* Debug */,
