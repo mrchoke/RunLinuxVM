@@ -6,10 +6,19 @@
  */
 
 import Virtualization
+import Foundation
+import Cocoa
 
+let appName = Bundle.main.infoDictionary?["CFBundleName"] as? String
+let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+let appPath = Bundle.main.bundleURL.absoluteString
 
+var isoPath: String? = nil
 var vmBundlePath = NSHomeDirectory() + "/LinuxVM.bundle/"
 let mainDiskImagePath = vmBundlePath + "Disk.img"
+var ndDiskImagePath: [String]? = nil
+var sharePaths: [String]? = nil
 let efiVariableStorePath = vmBundlePath + "NVRAM"
 let machineIdentifierPath = vmBundlePath + "MachineIdentifier"
 var cpuNums: Int = 0
@@ -17,6 +26,7 @@ var screenWidth = 1920
 var screenHeight = 1080
 var imageSize: UInt64 = 10
 var ramSize: UInt64 = 4
+var liveMode = false
 
 struct Resolution {
     var width: Int
@@ -31,13 +41,18 @@ let Resolutions: [String: Resolution] = [
 ]
 
 enum OptionCode: Int32 {
+    case R = 0x52
+    case S = 0x53
     case c = 0x63
     case d = 0x64
     case h = 0x68
+    case i = 0x69
+    case l = 0x6C
     case m = 0x6D
-    case r = 0x72
     case p = 0x70
-    case firstLongOption = 0x100
+    case r = 0x72
+    case s = 0x73
+    case version
 }
 
 extension StaticString {
@@ -51,13 +66,123 @@ let longOpts: [option] = [
     option(name: ("cpu" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.c.rawValue),
     option(name: ("disk" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.d.rawValue),
     option(name: ("help" as StaticString).ccharPointer, has_arg: no_argument, flag: nil, val: OptionCode.h.rawValue),
-    option(name: ("resolution" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.r.rawValue),
+    option(name: ("iso" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.i.rawValue),
+    option(name: ("live" as StaticString).ccharPointer, has_arg: no_argument, flag: nil, val: OptionCode.l.rawValue),
     option(name: ("mem" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.m.rawValue),
     option(name: ("path" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.p.rawValue),
+    option(name: ("raw-imgs" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.R.rawValue),
+    option(name: ("resolution" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.r.rawValue),
+    option(name: ("share-paths" as StaticString).ccharPointer, has_arg: required_argument, flag: nil, val: OptionCode.S.rawValue),
+    option(name: ("version" as StaticString).ccharPointer, has_arg: no_argument, flag: nil, val: OptionCode.version.rawValue),
     option()
 ]
 
 
+func cleanPath(path: String) -> String {
+    let cpath = path.replacingOccurrences(
+        of: "\\s+",
+        with: " ",
+        options: .regularExpression
+    )
+        .replacingOccurrences(
+            of: "/+",
+            with: "/",
+            options: .regularExpression
+        )
+        .trimmingCharacters(in: .whitespaces)
+    return cpath
+}
+
+func addTailingSlash(path: String) -> String {
+    let cpath = cleanPath(path: path)
+    return cpath.hasSuffix("/") ? cpath : cpath + "/"
+}
+
+func getOpt() {
+    while case let opt = getopt_long(CommandLine.argc, CommandLine.unsafeArgv, "hR:S:c:d:i:lr:m:p:s:", longOpts, nil), opt != -1 {
+        switch opt {
+            
+        case OptionCode.c.rawValue:
+            let cpuarg = (Int(String(cString: optarg)) ?? 1)
+            
+            if cpuarg > 0 && cpuarg < ProcessInfo.processInfo.processorCount {
+                cpuNums = cpuarg
+            } else {
+                fatalError("CPU number [1..\(ProcessInfo.processInfo.processorCount - 1)]")
+            }
+            
+        case OptionCode.d.rawValue:
+            imageSize = UInt64(Int(String(cString: optarg)) ?? 0)
+            
+        case OptionCode.R.rawValue:
+            ndDiskImagePath = [String(cString: optarg)]
+            let optDisk = String(cString: optarg)
+            ndDiskImagePath = optDisk
+                .split(separator: ",")
+                .map({ (substring) in
+                    return cleanPath(path: String(substring))
+                })
+            
+        case OptionCode.i.rawValue:
+            isoPath = cleanPath(path: String(cString: optarg))
+            
+        case OptionCode.l.rawValue:
+            liveMode = true
+            
+        case OptionCode.m.rawValue:
+            ramSize = UInt64(Int(String(cString: optarg)) ?? 0)
+            
+        case OptionCode.p.rawValue:
+            vmBundlePath = addTailingSlash(path: String(cString: optarg))
+            
+        case OptionCode.r.rawValue:
+            let optres = String(cString: optarg)
+            
+            if let res = Resolutions[optres]{
+                screenWidth = res.width
+                screenHeight = res.height
+            } else {
+                fatalError("Invalid resolution \(optres): hd, fhd, 2k and 4k")
+            }
+            
+        case OptionCode.S.rawValue:
+            let optres = String(cString: optarg)
+            sharePaths = optres
+                .split(separator: ",")
+                .map({ (substring) in
+                    return addTailingSlash(path: String(substring))
+                })
+            
+            
+            
+        case OptionCode.h.rawValue:
+            
+            print("""
+                Options available:
+                 --cpu, -c: number of cpus [1..\(ProcessInfo.processInfo.processorCount - 1)]
+                 --disk, -d: disk image size in GB
+                 --mem, -m: memory size in GB
+                 --iso, -i: Linux installer ISO path
+                 --live, -l: Boot ISO in live mode only
+                 --path, -p: bundle path with tailing slash eg. /path/to/Debian.bundle/
+                 --raw-imgs, -i: additional disk image files seperate by comma
+                 --resolution, -r: screen resolution preset [hd, fhd, 2k, 4k]
+                 --share-paths, -s: share paths to guest seperate by comma
+                 --help, -h: show this help
+                 --version: show app version
+                """)
+            exit(0)
+            
+        case OptionCode.version.rawValue:
+            
+            print("\(appName!) \(appVersion!).\(buildVersion!)")
+            exit(0)
+            
+        default:
+            print("")
+        }
+    }
+}
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
@@ -73,65 +198,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     private var needsInstall = true
     
     override init() {
-        
-        while case let opt = getopt_long(CommandLine.argc, CommandLine.unsafeArgv, "hc:d:r:m:p:", longOpts, nil), opt != -1 {
-            switch opt {
-            
-            case OptionCode.c.rawValue:
-                let cpuarg = (Int(String(cString: optarg)) ?? 1)
-                
-                if cpuarg > 0 && cpuarg < ProcessInfo.processInfo.processorCount {
-                    cpuNums = cpuarg
-                } else {
-                    fatalError("CPU number [1..\(ProcessInfo.processInfo.processorCount - 1)]")
-                }
-                
-            case OptionCode.d.rawValue:
-                imageSize = UInt64(Int(String(cString: optarg)) ?? 0)
-                
-            case OptionCode.m.rawValue:
-                ramSize = UInt64(Int(String(cString: optarg)) ?? 0)
-                
-            case OptionCode.p.rawValue:
-                vmBundlePath = String(cString: optarg)
-                
-            case OptionCode.r.rawValue:
-                let optres = String(cString: optarg)
-                
-                if let res = Resolutions[optres]{
-                    screenWidth = res.width
-                    screenHeight = res.height
-                } else {
-                    fatalError("Invalid resolution \(optres): hd, fhd, 2k and 4k")
-                }
-                
-                
-            case OptionCode.h.rawValue:
-            
-                print("""
-                    Options available:
-                     --cpu, -c: number of cpus [1..\(ProcessInfo.processInfo.processorCount - 1)]
-                     --disk, -d: disk image size in GB
-                     --mem, -m: memory size in GB
-                     --path, -p: bundle path with tailing slash eg. /path/to/Debian.bundle/
-                     --resolution, -r: screen resolution preset [hd, fhd, 2k, 4k]
-                     --help, -h: show this help
-                    """)
-                exit(0)
-            
-            default:
-                print("")
-            }
-        }
-        
         super.init()
     }
     
+    
+    private func showDialog(title: String, text: String) -> Bool {
+        
+        
+        let alert = NSAlert()
+        
+        alert.messageText = title
+        alert.informativeText = text
+        alert.window.level = .floating
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
+        alert.alertStyle = .informational
+        
+        return alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn
+        
+    }
+    
     private func createVMBundle() {
+        
         do {
-            try FileManager.default.createDirectory(atPath: vmBundlePath, withIntermediateDirectories: false)
+            try FileManager.default.createDirectory(atPath: vmBundlePath, withIntermediateDirectories: true)
         } catch {
-            fatalError("Failed to create “GUI Linux VM.bundle.”")
+            fatalError("Failed to create “LinuxVM.bundle.”")
         }
     }
     
@@ -147,7 +239,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         }
         
         do {
-           
+            
             try mainDiskFileHandle.truncate(atOffset: imageSize * 1024 * 1024 * 1024)
         } catch {
             fatalError("Failed to truncate the main disk image.")
@@ -163,6 +255,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         
         let mainDisk = VZVirtioBlockDeviceConfiguration(attachment: mainDiskAttachment)
         return mainDisk
+    }
+    
+    private func createNDBlockDeviceConfiguration(img: String) -> VZVirtioBlockDeviceConfiguration {
+        guard let ndDiskAttachment = try? VZDiskImageStorageDeviceAttachment(url: URL(fileURLWithPath: img), readOnly: false) else {
+            fatalError("Failed to attachment \(img).")
+        }
+        
+        let ndDisk = VZVirtioBlockDeviceConfiguration(attachment: ndDiskAttachment)
+        return ndDisk
     }
     
     private func computeCPUCount() -> Int {
@@ -275,20 +376,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return consoleDevice
     }
     
+#if arch(arm64)
     
-    private func createRosettaShare(configuration: VZVirtualMachineConfiguration) throws {
-        
+    private func createRosettaShare()  ->  VZVirtioFileSystemDeviceConfiguration  {
         let tag = "ROSETTA"
-        // let configuration = VZVirtualMachineConfiguration()
+        
         do {
             let _ =  try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
             let rosettaDirectoryShare = try VZLinuxRosettaDirectoryShare()
             let fileSystemDevice = VZVirtioFileSystemDeviceConfiguration(tag: tag)
             fileSystemDevice.share = rosettaDirectoryShare
             
-            configuration.directorySharingDevices = [ fileSystemDevice ]
+            return fileSystemDevice
         } catch {
             fatalError("Rosetta is unavailable")
+            
+        }
+        
+    }
+    
+#endif
+    
+    private func createDirectoryShare(path: String)  ->  VZVirtioFileSystemDeviceConfiguration  {
+        
+        let tag = path
+        let dir =  VZSharedDirectory(url: URL(fileURLWithPath: path), readOnly: false)
+        
+        do {
+            let _ =  try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
+            let DirectoryShare =   VZSingleDirectoryShare(directory:  dir)
+            let fileSystemDevice = VZVirtioFileSystemDeviceConfiguration(tag: tag)
+            fileSystemDevice.share = DirectoryShare
+            
+            
+            return fileSystemDevice
+        } catch {
+            fatalError("Share Directory is unavailable")
             
         }
         
@@ -308,25 +431,35 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         let platform = VZGenericPlatformConfiguration()
         let bootloader = VZEFIBootLoader()
         let disksArray = NSMutableArray()
+        let shareFSArray = NSMutableArray()
+        
+        platform.machineIdentifier =  !FileManager.default.fileExists(atPath: machineIdentifierPath) ? createAndSaveMachineIdentifier() : retrieveMachineIdentifier()
+        
+        bootloader.variableStore = !FileManager.default.fileExists(atPath: efiVariableStorePath) ?
+        createEFIVariableStore() : retrieveEFIVariableStore()
         
         if needsInstall {
-            // This is a fresh install: Create a new machine identifier and EFI variable store,
-            // and configure a USB mass storage device to boot the ISO image.
-            platform.machineIdentifier = createAndSaveMachineIdentifier()
-            bootloader.variableStore = createEFIVariableStore()
             disksArray.add(createUSBMassStorageDeviceConfiguration())
-        } else {
-            // The VM is booting from a disk image that already has the OS installed.
-            // Retrieve the machine identifier and EFI variable store that were saved to
-            // disk during installation.
-            platform.machineIdentifier = retrieveMachineIdentifier()
-            bootloader.variableStore = retrieveEFIVariableStore()
         }
         
         virtualMachineConfiguration.platform = platform
         virtualMachineConfiguration.bootLoader = bootloader
         
-        disksArray.add(createBlockDeviceConfiguration())
+        if !liveMode { disksArray.add(createBlockDeviceConfiguration())}
+        
+        if (ndDiskImagePath != nil) {
+            print("Add image disks:")
+            for path in ndDiskImagePath! {
+                if FileManager.default.fileExists(atPath: path) {
+                    disksArray.add(createNDBlockDeviceConfiguration(img: path))
+                    print("\(path)")
+                } else {
+                    print("\(path) is not a file")
+                }
+                
+            }
+        }
+        
         guard let disks = disksArray as? [VZStorageDeviceConfiguration] else {
             fatalError("Invalid disksArray.")
         }
@@ -339,12 +472,35 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         virtualMachineConfiguration.keyboards = [VZUSBKeyboardConfiguration()]
         virtualMachineConfiguration.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
         virtualMachineConfiguration.consoleDevices =  [createSpiceAgentConsoleDeviceConfiguration()]
-        do {
-            try createRosettaShare(configuration: virtualMachineConfiguration)
-        } catch {
-            print("Rosetta is unavailable\n")
+        
+#if arch(arm64)
+        shareFSArray.add(createRosettaShare())
+#endif
+        var isDir : ObjCBool = true
+        if (sharePaths != nil) {
+            print("Use:")
+            for path in sharePaths! {
+                if FileManager.default.fileExists(atPath: path, isDirectory: &isDir) {
+                    shareFSArray.add(createDirectoryShare(path: path))
+                    print("mount -t virtiofs \(path) mount_point")
+                } else {
+                    print("\(path) is not a directory")
+                }
+                
+            }
         }
-  
+        
+        
+        virtualMachineConfiguration.directorySharingDevices = (shareFSArray as? [VZDirectorySharingDeviceConfiguration])!
+        
+        /*
+         do {
+         try createRosettaShare(configuration: virtualMachineConfiguration)
+         } catch {
+         print("Rosetta is unavailable\n")
+         }
+         */
+        
         try! virtualMachineConfiguration.validate()
         virtualMachine = VZVirtualMachine(configuration: virtualMachineConfiguration)
     }
@@ -352,6 +508,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     // MARK: Start the virtual machine.
     
     func configureAndStartVirtualMachine() {
+        window.title = String(NSString(string: vmBundlePath).lastPathComponent.split(by: ".")[0])
         DispatchQueue.main.async {
             self.createVirtualMachine()
             self.virtualMachineView.virtualMachine = self.virtualMachine
@@ -368,31 +525,67 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         }
     }
     
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        if CommandLine.argc < 2 && !FileManager.default.fileExists(atPath: vmBundlePath) {
+            let x = showDialog(title: "Information", text: """
+            \(appName!) \(appVersion!).\(buildVersion!)
+            
+            Now You can run this app.
+
+            If you want to install Linux into default path click OK.
+
+            For more information run:
+
+            \(CommandLine.arguments[0]) --help
+
+            """)
+            if !x {
+                exit(0)
+            }
+            
+        }
+        
+        getOpt()
+        
         NSApp.activate(ignoringOtherApps: true)
         
-        // If "GUI Linux VM.bundle" doesn't exist, the sample app tries to create
-        // one and install Linux onto an empty disk image from the ISO image,
-        // otherwise, it tries to directly boot from the disk image inside
-        // the "GUI Linux VM.bundle".
-        if !FileManager.default.fileExists(atPath: vmBundlePath) {
+        if liveMode && isoPath != nil {
+            
+            print("Live Mode!!")
+            needsInstall = true
+            vmBundlePath = "/tmp/RunLinuxVM.bundle/"
+            createVMBundle()
+            
+            self.installerISOPath =  URL(fileURLWithPath: isoPath!)
+            
+            self.configureAndStartVirtualMachine()
+            
+        } else if !FileManager.default.fileExists(atPath: vmBundlePath) {
             needsInstall = true
             createVMBundle()
             createMainDiskImage()
             
-            let openPanel = NSOpenPanel()
-            openPanel.canChooseFiles = true
-            openPanel.allowsMultipleSelection = false
-            openPanel.canChooseDirectories = false
-            openPanel.canCreateDirectories = false
-            
-            openPanel.begin { (result) -> Void in
-                if result == .OK {
-                    self.installerISOPath = openPanel.url!
-                    self.configureAndStartVirtualMachine()
-                } else {
-                    fatalError("ISO file not selected.")
+            if isoPath == nil {
+                let openPanel = NSOpenPanel()
+                openPanel.title = "Choose an ISO file"
+                openPanel.canChooseFiles = true
+                openPanel.allowsMultipleSelection = false
+                openPanel.canChooseDirectories = false
+                openPanel.canCreateDirectories = false
+                
+                openPanel.begin { (result) -> Void in
+                    if result == .OK {
+                        self.installerISOPath = openPanel.url!
+                        self.configureAndStartVirtualMachine()
+                    } else {
+                        fatalError("ISO file not selected.")
+                    }
                 }
+            } else {
+                self.installerISOPath =  URL(fileURLWithPath: isoPath!)
+                self.configureAndStartVirtualMachine()
             }
         } else {
             needsInstall = false
