@@ -6,6 +6,21 @@ Install and run GUI Linux in a virtual machine using the Virtualization framewor
 
 ** __ให้เรากำหนด Developer Profile และ Signing package__
 
+## Support Itel & Apple Silicon
+
+ตั้งแต่ Version 1.1 เป็นต้นไป App จะเป็น Universal สามารถใช้ได้ทั้ง Intel และ M1, M2
+
+## การใช้งานครั้งแรกหลังจากติดตั้ง App 
+
+เนื่องจาก App ไม่ได้อยู่ใน App Store ให้ท่านเปิด option การรันจาก App Store และ นักพัฒนาที่เชื่อถือได้
+
+```
+System Setting --> Privacy Security --> Security --> App Store amd identified developer
+```
+หลังจากนั้นให้เปิด App ด้วยการ `Click ขวา และเลือก Open`
+
+ถ้าหากท่านสามารถใช้งานได้จะมี Dialog ขึ้นมาหากต้องการติดตั้ง Linux ตัวแรกใน default path ก็ให้ Click OK ได้เลย แต่ถ้าหากต้องการใช้ command line ให้  Cancel แล้วสั่งคำสั่งจากตั้วอย่างด้านล่าง
+
 ## Options ที่เพิ่มเข้าไป
 
 ```
@@ -14,12 +29,16 @@ Options available:
  --cpu, -c: number of cpus [1..9]
  --disk, -d: disk image size in GB
  --mem, -m: memory size in GB
+ --iso, -i: Linux installer ISO path
+ --live, -l: Boot ISO in live mode only
  --path, -p: bundle path with tailing slash eg. /path/to/Debian.bundle/
+ --raw-imgs, -I: additional disk image files seperate by comma
  --resolution, -r: screen resolution preset [hd, fhd, 2k, 4k]
+ --share-paths, -s: share paths to guest seperate by comma
  --help, -h: show this help
+ --version: show app version
 
 ```
-
 ## การ run VM
 
 ถ้า click run app โดยตรงจะใช้ path ที่กำหนดไว้ใน code คือ `$HOME/LinuxVM.bundle` ถ้าเราปิด dialog ทิ้งหรือติดตั้งไม่สำเร็จต้องลบ path นั้นทิ้งก่อน ถึงจะ run ครั้งต่อไปได้
@@ -30,11 +49,11 @@ Options available:
 
 ```
 /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
- -p $HOME/LinuxVM/Ubuntu.bundle/ \
- -r hd  \
- -c 4 \
- -m 4 \
- -d 10
+ --path $HOME/LinuxVM/Ubuntu.bundle/ \
+ --resolution hd  \
+ --cpu 4 \
+ --mem 4 \
+ --disk 10
 
 ```
 
@@ -42,13 +61,104 @@ Options available:
 
 ```
 /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
- -p $HOME/LinuxVM/Ubuntu.bundle/ \
- -r 4k \
- -c 4 \
- -m 4 
+ --path $HOME/LinuxVM/Ubuntu.bundle/ \
+ --resolution 4k \
+ -cpu 4 \
+ -mem 4 
 
 ```
 
+### Live Mode
+
+ในกรณีที่ท่านไม่อยากติดตั้งแค่อยากจะเล่นจาก ISO อย่างเดียวสามารถระบุ iso และ live ดังนี้
+
+```
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+--live \
+--iso Ubuntu-22.10.iso
+```
+แต่ปัจจุบัน Distro ที่มี iso arm64 ยังน้อย แต่ถ้าท่านใช้ CPU Intel สามารถ run ได้หลาย Distro
+
+### Share directory from macOS
+
+ท่านสามารถ Share directory จาก macOS ไปยัง Linux Guest ได้ โดยการระบุ option ถ้าหากมีมากกว่าหนึ่ง directory ให้ใช้ comma คั่นเช่น
+
+```
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+--path $HOME/LinuxVM/Debian.bundle/ \
+--share-paths "$HOME,/Volums/SSD/"
+```
+ถ้า directory มีอยู่จริง app จะทำการ share ให้เมื่อท่าน boot เข้าไปยัง Linux ให้ mount โดยใช้คำสั่ง
+
+```
+$ sudo mount -t virtiofs /User/mrchoke/ /mnt/mac_home
+$ sudo mount -t virtiofs /Volums/SSD/ /mnt/mac_ssd
+```
+โดย Tag ที่ระบุจะเป็น path เต็มของ macOS 
+
+### การ add disk image เพิ่มเติม
+
+ในกรณีที่ท่านต้องการเพิ่ม disk image หรือ raw disk image ที่มีนามสกุล `.img` เช่น linux image จากค่ายต่าง ๆ  image ของ VM ที่ถูกสร้างจาก App นี้สามารถเพิ่มเข้าไปได้ทั้งหมดถ้ามากกว่าหนึ่ง image ให้ใช้ comma คั่น เช่น
+
+```
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+--path $HOME/LinuxVM/Debian.bundle/ \
+--raw-imgs "$HOME/LinuxVM/Ubuntu.bundle/Disk.img,$HOME/Downloads/Manjaro-ARM.img"
+```
+ถ้า image เหล่านั้นมีอยู่จริง เมื่อ boot เข้าไปยัง Linux เสร็จแล้วสามารถ mount ใช้งาน หรือ format เพื่อทำการติดตั้งแบบ chroot ได้ โดยสามารถตรวจสอบด้วยคำสั่ง
+
+```
+$ lsblk 
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda    254:0    0   64G  0 disk 
+- vda1 254:1    0  512M  0 part /boot/efi
+- vda2 254:2    0 62.5G  0 part /
+- vda3 254:3    0  976M  0 part [SWAP]
+vdb    254:16   0   10G  0 disk 
+- vdb1 254:17   0  300M  0 part 
+- vdb2 254:18   0  9.7G  0 part 
+vdc    254:32   0   15G  0 disk 
+- vdc1 254:33   0  128M  0 part 
+- vdc2 254:34   0 14.9G  0 part
+```
+
+หรือจะ `fdisk -l` ก็ได้ ซึ่งจะเห็น disk เพิ่มเติมเข้ามาจากเดิมจะมีแค่ `/dev/vda` ก็จะมี `/dev/vdb /dev/vdc ...`
+
+### Running Intel Binaries in Linux VMs with Rosetta
+
+Feature นี้จะใช้ได้เฉพาะ เครื่อง M1 หรือ M2 เท่านั้นบน Intel ไม่จำเป็นเพราะเป็น x86_64 อยู่แล้ว
+ผมได้เพิ่ม code จากตัวอย่างของ  apple ไว้แล้วสามารถทดลองใช้ได้เลยโดยมีวิธีการดังนี้
+
+Tag ผมใช้คำว่่า `ROSETTA` 
+
+```
+% mkdir /tmp/mountpoint
+% sudo mount -t virtiofs ROSETTA /tmp/mountpoint
+% ls /tmp/mountpoint rosetta
+% sudo /usr/sbin/update-binfmts --install rosetta /tmp/mountpoint/rosetta \
+    --magic "\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00" \
+    --mask "\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff" \
+    --credentials yes --preserve no --fix-binary yes
+
+```
+
+Linux ที่มีคำสั่ง `update-binfmts` เช่น Ubuntu และ Debian ให้ลงเพิ่มเติมก่อน
+
+```
+% apt install binfmt-support
+```
+
+### Features อื่น ๆ
+
+-  Copy / Paste ระหว่าง Host กับ Guest ได้ และ สามารถข้ามไปมาระหว่าง Guest กับ Guest ก็ได้ หรือระหว่า อุปกรณ์อื่น ๆ ของท่านที่ login ด้วย Apple ID เดียวกัน 
+
+
+### สิ่งที่อาจจะเกิดขึ้นได้
+
+- บาง Distro จะไม่มีเสียงเพราะ kernel ไม่ support virtio_snd แต่สามารถ compile kernel ใหม่ได้เช่น Debian 11 เป็นต้น
+- Copy / Paste Distro ส่วนใหญ่จะมี spice-vdagent มาให้แต่ก็มีบาง Distro ท่านอาจจะต้องติดตั้งเองถึงจะได้ใช้งานได้
+
+---
 ## Overview
 
 This sample code project demonstrates how to install and run GUI Linux virtual machines (VMs) on a Mac.
