@@ -6,7 +6,7 @@ Install and run GUI Linux in a virtual machine using the Virtualization framewor
 
 ** __ให้เรากำหนด Developer Profile และ Signing package__
 
-## Support Itel & Apple Silicon
+## Support Intel & Apple Silicon
 
 ตั้งแต่ Version 1.1 เป็นต้นไป App จะเป็น Universal สามารถใช้ได้ทั้ง Intel และ M1, M2
 
