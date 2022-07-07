@@ -165,7 +165,7 @@ func getOpt() {
                  --iso, -i: Linux installer ISO path
                  --live, -l: Boot ISO in live mode only
                  --path, -p: bundle path with tailing slash eg. /path/to/Debian.bundle/
-                 --raw-imgs, -i: additional disk image files seperate by comma
+                 --raw-imgs, -R: additional disk image files seperate by comma
                  --resolution, -r: screen resolution preset [hd, fhd, 2k, 4k]
                  --share-paths, -s: share paths to guest seperate by comma
                  --help, -h: show this help
@@ -508,7 +508,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     // MARK: Start the virtual machine.
     
     func configureAndStartVirtualMachine() {
-        window.title = String(NSString(string: vmBundlePath).lastPathComponent.split(by: ".")[0])
+        window.title = String(NSString(string: vmBundlePath).lastPathComponent.split(separator: ".")[0])
         DispatchQueue.main.async {
             self.createVirtualMachine()
             self.virtualMachineView.virtualMachine = self.virtualMachine
