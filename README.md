@@ -1,4 +1,170 @@
-# Running GUI Linux in a virtual machine on a Mac
+[ภาษาไทย](#running-gui-linux-in-a-virtual-machine-on-a-mac---thai)
+---
+
+# Running GUI Linux in a Virtual Machine on a Mac - English
+
+Install and run GUI Linux in a virtual machine using the Virtualization framework.
+
+## Building and Usage
+
+** Set Developer Profile and Sign the package**
+
+## Support for Intel & Apple Silicon
+
+Starting from Version 1.1, the app is Universal and can be used on both Intel and M1, M2.
+
+## First-time Usage after Installation
+
+Since the app is not in the App Store, enable the option to run from the App Store and trusted developers:
+
+```
+System Setting --> Privacy & Security --> Security --> App Store and identified developers
+```
+
+Then, open the app by right-clicking and selecting Open.
+
+If you can run it, a dialog will appear. If you want to install the first Linux in the default path, click OK. Otherwise, cancel and use the command line as shown below.
+
+## Added Options
+
+```console
+$ /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM --help
+Options available:
+ --cpu, -c: number of CPUs [1..9]
+ --disk, -d: disk image size in GB
+ --mem, -m: memory size in GB
+ --iso, -i: Linux installer ISO path
+ --live, -l: Boot ISO in live mode only
+ --path, -p: bundle path with trailing slash e.g., /path/to/Debian.bundle/
+ --raw-imgs, -I: additional disk image files separated by commas
+ --resolution, -r: screen resolution preset [hd, fhd, 2k, 4k]
+ --share-paths, -s: share paths to guest separated by commas
+ --help, -h: show this help
+ --version: show app version
+```
+
+## Running the VM
+
+If you click run directly, it will use the path specified in the code, which is `$HOME/LinuxVM.bundle`. If you close the dialog or the installation fails, you must delete that path before running it again.
+
+### Example of Running with Specified Options
+
+The first run will be the installation; you need to have the ISO ready and specify the option -d or --disk for the image size in GB. For subsequent runs, you don't need to specify the disk size.
+
+```console
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+ --path $HOME/LinuxVM/Ubuntu.bundle/ \
+ --resolution hd  \
+ --cpu 4 \
+ --mem 4 \
+ --disk 10
+```
+
+After installation, you can change various settings as desired or according to your machine's capabilities.
+
+```console
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+ --path $HOME/LinuxVM/Ubuntu.bundle/ \
+ --resolution 4k \
+ -cpu 4 \
+ -mem 4 
+```
+
+### Live Mode
+
+If you only want to play from the ISO without installing, specify the iso and live options as follows:
+
+```console
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+--live \
+--iso Ubuntu-22.10.iso
+```
+
+Currently, there are few distros with arm64 ISOs, but if you use an Intel CPU, you can run many distros.
+
+### Sharing Directory from macOS
+
+You can share a directory from macOS to the Linux guest by specifying the option. If there is more than one directory, separate them with commas, like this:
+
+```console
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+--path $HOME/LinuxVM/Debian.bundle/ \
+--share-paths "$HOME,/Volumes/SSD/"
+```
+
+If the directories exist, the app will share them. When you boot into Linux, mount them with the command:
+
+```console
+$ sudo mount -t virtiofs /User/mrchoke/ /mnt/mac_home
+$ sudo mount -t virtiofs /Volumes/SSD/ /mnt/mac_ssd
+```
+
+The tag specified will be the full macOS path.
+
+### Adding Additional Disk Images
+
+If you want to add disk images or raw disk images with the `.img` extension, such as Linux images from various distributions, you can add them. If there is more than one image, separate them with commas, like this:
+
+```console
+/Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
+--path $HOME/LinuxVM/Debian.bundle/ \
+--raw-imgs "$HOME/LinuxVM/Ubuntu.bundle/Disk.img,$HOME/Downloads/Manjaro-ARM.img"
+```
+
+If these images exist, after booting into Linux, you can mount or format them to perform a chroot installation. Check with the command:
+
+```console
+$ lsblk 
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda    254:0    0   64G  0 disk 
+- vda1 254:1    0  512M  0 part /boot/efi
+- vda2 254:2    0 62.5G  0 part /
+- vda3 254:3    0  976M  0 part [SWAP]
+vdb    254:16   0   10G  0 disk 
+- vdb1 254:17   0  300M  0 part 
+- vdb2 254:18   0  9.7G  0 part 
+vdc    254:32   0   15G  0 disk 
+- vdc1 254:33   0  128M  0 part 
+- vdc2 254:34   0 14.9G  0 part
+```
+
+Or use `fdisk -l`, where you'll see additional disks such as `/dev/vdb`, `/dev/vdc`, etc., alongside `/dev/vda`.
+
+### Running Intel Binaries in Linux VMs with Rosetta
+
+This feature is only available on M1 or M2 machines. It's not needed on Intel since it’s already x86_64. I've added code from Apple's example, and you can try it as follows:
+
+Tag is named `ROSETTA`.
+
+```console
+% mkdir /tmp/mountpoint
+% sudo mount -t virtiofs ROSETTA /tmp/mountpoint
+% ls /tmp/mountpoint rosetta
+% sudo /usr/sbin/update-binfmts --install rosetta /tmp/mountpoint/rosetta \
+    --magic "\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00" \
+    --mask "\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff" \
+    --credentials yes --preserve no --fix-binary yes
+```
+
+For Linux with the `update-binfmts` command, like Ubuntu and Debian, install additional packages first:
+
+```console
+% apt install binfmt-support
+```
+
+### Other Features
+
+- Copy/Paste between Host and Guest is supported. You can also switch between Guest and Guest or between your other devices logged in with the same Apple ID.
+
+### Possible Issues
+
+- Some distros may lack sound because the kernel doesn't support `virtio_snd`, but you can compile the kernel yourself, such as with Debian 11.
+- Copy/Paste functionality: Most distros come with `spice-vdagent`, but some may require you to install it yourself.
+
+[English](#running-gui-linux-in-a-virtual-machine-on-a-mac---english) 
+# ภาษาไทย
+
+# Running GUI Linux in a virtual machine on a Mac - Thai
 
 Install and run GUI Linux in a virtual machine using the Virtualization framework.
 
@@ -23,7 +189,7 @@ System Setting --> Privacy Security --> Security --> App Store amd identified de
 
 ## Options ที่เพิ่มเข้าไป
 
-```
+```console
 $ /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM --help
 Options available:
  --cpu, -c: number of cpus [1..9]
@@ -47,7 +213,7 @@ Options available:
 
 การ run ครั้งแรกจะเป็นการติดตั้งเราต้องเตรียม ISO ไว้ให้เรียบร้อย และ ระบุ option -d หรือ --disk เป็นขนาดของ image หน่วยเป็น GB ถ้า run ครั้งต่อไปก็ไม่จำเป็นต้องระบุขนาด disk
 
-```
+```console
 /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
  --path $HOME/LinuxVM/Ubuntu.bundle/ \
  --resolution hd  \
@@ -59,7 +225,7 @@ Options available:
 
 การ run หลังจากติดตั้งเสร็จเราสามารถเปลี่ยนค่าต่าง ๆ ได้ตามใจชอบหรือตามความสามารถของเครื่องนะครับ
 
-```
+```console
 /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
  --path $HOME/LinuxVM/Ubuntu.bundle/ \
  --resolution 4k \
@@ -72,7 +238,7 @@ Options available:
 
 ในกรณีที่ท่านไม่อยากติดตั้งแค่อยากจะเล่นจาก ISO อย่างเดียวสามารถระบุ iso และ live ดังนี้
 
-```
+```console
 /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
 --live \
 --iso Ubuntu-22.10.iso
@@ -83,14 +249,14 @@ Options available:
 
 ท่านสามารถ Share directory จาก macOS ไปยัง Linux Guest ได้ โดยการระบุ option ถ้าหากมีมากกว่าหนึ่ง directory ให้ใช้ comma คั่นเช่น
 
-```
+```console
 /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
 --path $HOME/LinuxVM/Debian.bundle/ \
 --share-paths "$HOME,/Volums/SSD/"
 ```
 ถ้า directory มีอยู่จริง app จะทำการ share ให้เมื่อท่าน boot เข้าไปยัง Linux ให้ mount โดยใช้คำสั่ง
 
-```
+```console
 $ sudo mount -t virtiofs /User/mrchoke/ /mnt/mac_home
 $ sudo mount -t virtiofs /Volums/SSD/ /mnt/mac_ssd
 ```
@@ -100,14 +266,14 @@ $ sudo mount -t virtiofs /Volums/SSD/ /mnt/mac_ssd
 
 ในกรณีที่ท่านต้องการเพิ่ม disk image หรือ raw disk image ที่มีนามสกุล `.img` เช่น linux image จากค่ายต่าง ๆ  image ของ VM ที่ถูกสร้างจาก App นี้สามารถเพิ่มเข้าไปได้ทั้งหมดถ้ามากกว่าหนึ่ง image ให้ใช้ comma คั่น เช่น
 
-```
+```console
 /Applications/RunLinuxVM.app/Contents/MacOS/RunLinuxVM  \
 --path $HOME/LinuxVM/Debian.bundle/ \
 --raw-imgs "$HOME/LinuxVM/Ubuntu.bundle/Disk.img,$HOME/Downloads/Manjaro-ARM.img"
 ```
 ถ้า image เหล่านั้นมีอยู่จริง เมื่อ boot เข้าไปยัง Linux เสร็จแล้วสามารถ mount ใช้งาน หรือ format เพื่อทำการติดตั้งแบบ chroot ได้ โดยสามารถตรวจสอบด้วยคำสั่ง
 
-```
+```console
 $ lsblk 
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 vda    254:0    0   64G  0 disk 
@@ -131,7 +297,7 @@ Feature นี้จะใช้ได้เฉพาะ เครื่อง M
 
 Tag ผมใช้คำว่่า `ROSETTA` 
 
-```
+```console
 % mkdir /tmp/mountpoint
 % sudo mount -t virtiofs ROSETTA /tmp/mountpoint
 % ls /tmp/mountpoint rosetta
@@ -144,7 +310,7 @@ Tag ผมใช้คำว่่า `ROSETTA`
 
 Linux ที่มีคำสั่ง `update-binfmts` เช่น Ubuntu และ Debian ให้ลงเพิ่มเติมก่อน
 
-```
+```console
 % apt install binfmt-support
 ```
 
