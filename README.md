@@ -57,7 +57,8 @@ The first run will be the installation; you need to have the ISO ready and speci
  --resolution hd  \
  --cpu 4 \
  --mem 4 \
- --disk 10
+ --disk 10 \
+ --iso Ubuntu-22.10.iso
 ```
 
 After installation, you can change various settings as desired or according to your machine's capabilities.
@@ -219,7 +220,8 @@ Options available:
  --resolution hd  \
  --cpu 4 \
  --mem 4 \
- --disk 10
+ --disk 10 \
+ --iso Ubuntu-22.10.iso
 
 ```
 
